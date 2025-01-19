@@ -15,11 +15,11 @@ datasource db {
 
 model User {
   id    Int    @id @default(autoincrement()) // Уникальный идентификатор, создается автоматически
-  firstName String // Поле может быть null, поэтому используется "?"
-  lastName  String?
+  firstName String 
+  lastName  String
   emailId   String  @unique // Уникальное поле
   password  String
-  age       Int?
+  age       Int?  @default(18)  // Поле может быть null, поэтому используется "?"
   gender    String? 
   createdAt DateTime @default(now()) // Автоматическая запись времени создания
   updatedAt DateTime @updatedAt      // Автоматическое обновление времени изменения

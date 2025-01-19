@@ -1,10 +1,17 @@
+// import express
 const express = require("express");
-const app = express();
+// import - prisma
 const { PrismaClient } = require("@prisma/client");
+// import - файлы
 const connectDB = require("./config/database.js");
+const { validateSignUpData } = require("./utils/validation.js");
+// import Библиотеки
 const validator = require("validator");
-const port = 3000;
+const bcrypt = require("bcrypt");
 
+// Глобальные переменные
+const port = 3000;
+const app = express();
 const prisma = new PrismaClient();
 
 // Middleware для обработки JSON-запросов
@@ -12,51 +19,57 @@ app.use(express.json());
 
 // POST API для signup
 app.post("/signup", async (req, res) => {
-  const { firstName, lastName, emailId, age, skills, password, photoUrl } =
-    req.body;
-
-  // Валидация email
-  if (!validator.isEmail(emailId)) {
-    return res.status(400).json({ message: "Invalid email format" });
-  }
-
-  // Валидация URL (например, для фото профиля)
-  if (photoUrl && !validator.isURL(photoUrl)) {
-    return res.status(400).json({ message: "Invalid URL format for photoUrl" });
-  }
-
-  // Валидация пароля (например, минимальная длина, наличие цифр, символов)
-  if (!validator.isStrongPassword(password)) {
-    return res.status(400).json({ message: "Password is not strong enough" });
-  }
-
-  if (age < 18) {
-    return res.status(400).json({ message: "Age must be at least 18" });
-  }
-
   try {
+    // Функция для валидации данных
+    validateSignUpData(req);
+
+    // Извлекаем поля которые нам нужны
+    const { firstName, lastName, emailId, password } = req.body;
+
+    // Зашифруем password
+    const passwordHash = await bcrypt.hash(password, 10);
+
     // Сохранение нового пользователя в базе данных
     const newUser = await prisma.user.create({
       data: {
-        firstName,
-        lastName,
-        age,
-        emailId,
-        skills,
-        password,
+        firstName: firstName.trim().toLowerCase(),
+        lastName: lastName.trim().toLowerCase(),
+        emailId: emailId.trim().toLowerCase(),
+        password: passwordHash.trim().toLowerCase(),
       },
     });
-    res.send("User created successfully");
-    // res.status(201).json({
-    //   message: "User created successfully",
-    //   user: newUser,
-    // });
+    res.status(201).json({
+      message: "User created successfully",
+      user: newUser,
+    });
   } catch (error) {
     console.error("Error creating user:", error);
     res.status(500).json({
       message: "Error creating user",
       error: error.message,
     });
+  }
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    // Проверка правильно ли ввели данные пользователь
+    // Есть ли в базе данных почта и пароль которые пишем пользователь
+    const user = await prisma.user.findUnique({
+      where: { emailId },
+    });
+    if (!user) {
+      throw new Error("Invalid credentials!");
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (isPasswordValid) {
+      res.send("Login Successful!!!");
+    } else {
+      throw new Error("Invalid credentials!");
+    }
+  } catch (err) {
+    res.status(400).send("ERROR : " + err.message);
   }
 });
 
@@ -129,6 +142,14 @@ app.patch("/user/:id", async (req, res) => {
     });
   }
 
+  // Если пароль был передан для обновления, зашифруем его
+  if (trimmedAndLowercasedData.password) {
+    trimmedAndLowercasedData.password = await bcrypt.hash(
+      trimmedAndLowercasedData.password,
+      10
+    );
+  }
+
   try {
     const updatedUser = await prisma.user.update({
       where: { id: parseInt(id) }, // Преобразуем id в число
@@ -175,7 +196,7 @@ app.patch("/updateUser/:id", async (req, res) => {
       throw new Error("Update not allowed");
     }
 
-    if (data?.skills.length > 10) {
+    if (data?.skills?.length > 10) {
       throw new Error("Skills cannot be more than 10");
     }
 
