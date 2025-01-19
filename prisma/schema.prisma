@@ -15,12 +15,14 @@ datasource db {
 
 model User {
   id    Int    @id @default(autoincrement()) // Уникальный идентификатор, создается автоматически
-  firstName String? // Поле может быть null, поэтому используется "?"
+  firstName String // Поле может быть null, поэтому используется "?"
   lastName  String?
   emailId   String  @unique // Уникальное поле
   password  String
   age       Int?
-  gender    String?
+  gender    String? 
   createdAt DateTime @default(now()) // Автоматическая запись времени создания
   updatedAt DateTime @updatedAt      // Автоматическое обновление времени изменения
+  photoUrl String? @default("This is a default about of the user!")
+  skills String[] // Массив строк, необязательный - Массивы в Prisma не требуют явного использования ?, когда они могут быть пустыми. Просто указывайте String[], и если в запросах или при создании записи поле не будет передано, оно не будет сохранено.
 }
