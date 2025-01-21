@@ -25,4 +25,33 @@ model User {
   updatedAt DateTime @updatedAt      // Автоматическое обновление времени изменения
   photoUrl String? @default("This is a default about of the user!")
   skills String[] // Массив строк, необязательный - Массивы в Prisma не требуют явного использования ?, когда они могут быть пустыми. Просто указывайте String[], и если в запросах или при создании записи поле не будет передано, оно не будет сохранено.
+  about String?
+
+   // Связи с запросами
+  sentRequests       ConnectionRequest[]  @relation("SentRequests")
+  receivedRequests   ConnectionRequest[]  @relation("ReceivedRequests")
+}
+
+model ConnectionRequest {
+  id         Int @id @default(autoincrement()) // Уникальный идентификатор
+  fromUserId Int    // ID пользователя, отправившего запрос
+  toUserId   Int    // ID пользователя, получившего запрос
+  status     Status // Статус запроса (с ограниченными значениями)
+  createdAt  DateTime @default(now()) // Время создания
+  updatedAt  DateTime @updatedAt // Время последнего обновления
+
+   // Связи
+   fromUser User  @relation("SentRequests", fields: [fromUserId], references: [id])
+   toUser   User  @relation("ReceivedRequests", fields: [toUserId], references: [id])
+
+   // Уникальный составной индекс
+  @@unique([fromUserId, toUserId])
+
+}
+
+enum Status {
+  ignore
+  interested
+  accepted
+  rejected
 }
