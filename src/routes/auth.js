@@ -14,7 +14,8 @@ authRouter.post("/signup", async (req, res) => {
     validateSignUpData(req);
 
     // Извлекаем поля которые нам нужны
-    const { firstName, lastName, emailId, password } = req.body;
+    const { firstName, lastName, emailId, password, photoUrl, skills, about } =
+      req.body;
 
     // Зашифруем password
     const passwordHash = await userService.passwordHash(password, 10);
@@ -26,6 +27,9 @@ authRouter.post("/signup", async (req, res) => {
         lastName: lastName.trim().toLowerCase(),
         emailId: emailId.trim().toLowerCase(),
         password: passwordHash,
+        photoUrl: photoUrl,
+        skills: skills,
+        about: about,
       },
     });
     res.status(201).json({

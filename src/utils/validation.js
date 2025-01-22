@@ -1,7 +1,16 @@
 const validator = require("validator");
 
 const validateSignUpData = (req) => {
-  const { firstName, lastName, emailId, password, age, photoUrl } = req.body;
+  const {
+    firstName,
+    lastName,
+    emailId,
+    password,
+    age,
+    photoUrl,
+    skills,
+    about,
+  } = req.body;
   if (!firstName || !lastName) {
     throw new Error("Name is not valid!");
   } else if (firstName.length < 4 && firstName.length > 50) {
@@ -14,6 +23,10 @@ const validateSignUpData = (req) => {
     throw new Error("Invalid URL format for photoUrl");
   } else if (age && age < 18) {
     throw new Error("Age must be at least 18");
+  } else if (skills && skills.length > 15) {
+    throw new Error("Skills should not be more than 15");
+  } else if (about && about.length > 50) {
+    throw new Error("About should not more than 50");
   }
 };
 

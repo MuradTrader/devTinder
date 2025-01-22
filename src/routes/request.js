@@ -14,7 +14,7 @@ requestRouter.post(
       const toUserId = parseInt(req.params.toUserId, 10);
       const status = req.params.status;
 
-      const allowedStatus = ["ignored", "interested"];
+      const allowedStatus = ["ignore", "interested"];
       if (!allowedStatus.includes(status)) {
         return res.status(400).json({
           message: "Invalid status type: " + status,
